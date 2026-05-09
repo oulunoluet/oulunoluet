@@ -6,6 +6,12 @@
   <title>Oulun oluthinnat</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
   <style>
+
+    /* Pakotetaan hinta-sarakkeet pysymään kurissa */
+th:last-child, td:last-child {
+    width: 80px;
+    min-width: 80px;
+}
     /* Tekee hakukentästä täyslevyisen ja helposti klikattavan mobiilissa */
 .search-box input {
     width: 100%;
@@ -360,7 +366,7 @@ fetch("baarit.csv")
   summary.style.backgroundColor = "#1a3a1a";
   summary.style.fontWeight = "bold";
   // Tässä on 5 erillistä solua, jotta taulukon sarakkeet pysyvät suorassa:
-  summary.innerHTML = '<td>🏆 Halvin</td><td>' + escapeHtml(suodatetut[0].baari) + '</td><td></td><td></td><td style="text-align:center; background:#00ff66; color:#000;">' + suodatetut[0].litrahinta.toFixed(2) + ' €/l</td>';
+ '<td colspan="4" style="text-align:right; padding-right:10px;">🏆 Halvin: ' + escapeHtml(suodatetut[0].baari) + '</td><td style="text-align:center; background:#00ff66; color:#000;">' + suodatetut[0].litrahinta.toFixed(2) + '</td>';
   tbody.appendChild(summary);
     
     var searchInput = document.getElementById("searchInput");
