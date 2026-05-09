@@ -2,7 +2,6 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8">
-  <!-- Tämä rivi estää sivua näyttämästä liian pieneltä mobiilissa -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Oulun oluthinnat</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
@@ -19,16 +18,11 @@
       margin-bottom: 5px;
     }
 
+    /* Ylätunnisteen tyyli */
     .info-header {
       margin-bottom: 25px;
       font-size: 0.9em;
       color: #888;
-    }
-
-    /* Tämä lisäys pitää taulukon kurissa mobiilissa */
-    .table-wrapper {
-      width: 100%;
-      overflow-x: auto;
     }
 
     table {
@@ -79,7 +73,7 @@
       border: 1px solid #444;
       background: #2a2a2a;
       color: white;
-      font-size: 16px; /* 16px fontti estää iPhonen automaattizoomauksen */
+      font-size: 14px;
     }
     
     .search-box input:focus {
@@ -134,7 +128,6 @@
       border: 1px solid #444;
       color: white;
       border-radius: 8px;
-      box-sizing: border-box;
     }
 
     .modal button {
@@ -166,6 +159,7 @@
   <button class="suggestion-btn" id="suggestionBtn">📝 Ilmoita muutoksesta</button>
 </div>
 
+<!-- Päivitystiedot siirretty ylös -->
 <div class="info-header">
   <p><span class="update-date">Päivitetty: 9.5.2026</span></p>
   <p>Sivulla näkyvät hinnat ovat baarien normaalihintoja. Happy hour - ja opiskelijatarjoukset eivät näy toistaiseksi.</p>
@@ -175,12 +169,11 @@
   <input type="text" id="searchInput" placeholder="🔍 Hae baaria tai olutta...">
 </div>
 
-<div class="table-wrapper">
 <table id="taulukko">
   <thead>
     <tr>
       <th>Baari</th>
-      <th>Olut</th>
+      <th>Olut</th> <!-- Muutettu Tyyppi -> Olut -->
       <th>Koko (l)</th>
       <th>Hinta (€)</th>
       <th>€/l</th>
@@ -188,7 +181,6 @@
   </thead>
   <tbody></tbody>
 </table>
-</div>
 
 <div id="suggestionModal" class="modal">
   <div class="modal-content">
@@ -211,20 +203,34 @@
 </div>
 
 <script>
+// Modal toiminnallisuus
 var modal = document.getElementById("suggestionModal");
 var btn = document.getElementById("suggestionBtn");
 var span = document.getElementsByClassName("close")[0];
 var kaikkiBaarit = [];
 
-btn.onclick = function() { modal.style.display = "block"; }
-span.onclick = function() { modal.style.display = "none"; }
-window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+btn.onclick = function() {
+  modal.style.display = "block";
+}
+
+span.onclick = function() {
+  modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
 
 document.getElementById("sendEmailBtn").onclick = function() {
   var type = document.getElementById("type").value;
   var details = document.getElementById("details").value;
   var email = document.getElementById("email").value;
-  var typeText = (type === "hintamuutos") ? "Hintamuutos" : (type === "uusi_baari") ? "Uusi baari" : "Muu";
+  var typeText = "";
+  if (type === "hintamuutos") typeText = "Hintamuutos";
+  else if (type === "uusi_baari") typeText = "Uusi baari";
+  else typeText = "Muu";
   
   var body = "Hei\n\nIlmoitan sivustolle:\n\nTyyppi: " + typeText + "\n\nTiedot:\n" + details + (email ? "\n\nLähettäjä: " + email : "");
   var mailtoLink = "mailto:oulunoluet@gmail.com?subject=Oluthintaehdotus: " + typeText + "&body=" + encodeURIComponent(body);
@@ -234,6 +240,7 @@ document.getElementById("sendEmailBtn").onclick = function() {
   document.getElementById("email").value = "";
 }
 
+// HAKUTOIMINTO
 function haeBaareja() {
   var hakusana = document.getElementById("searchInput").value.toLowerCase();
   var suodatetut = kaikkiBaarit.filter(function(baari) {
@@ -249,6 +256,7 @@ function haeBaareja() {
   }
   
   suodatetut.sort(function(a, b) { return a.litrahinta - b.litrahinta; });
+  
   var min = suodatetut[0].litrahinta;
   var max = suodatetut[suodatetut.length - 1].litrahinta;
   
@@ -263,7 +271,9 @@ function haeBaareja() {
     var item = suodatetut[j];
     var tr = document.createElement("tr");
     var color = getColor(item.litrahinta);
+    
     if (j === 0) tr.style.borderTop = "3px solid gold";
+    
     tr.innerHTML = '<td><strong>' + escapeHtml(item.baari) + '</strong></td><td>' + escapeHtml(item.tyyppi) + '</td><td>' + item.koko.toFixed(2) + ' l</td><td>' + item.hinta.toFixed(2) + ' €</td><td style="background:' + color + '; font-weight:bold; color:#000; text-align:center;">' + item.litrahinta.toFixed(2) + ' €/l</td>';
     tbody.appendChild(tr);
   }
@@ -282,27 +292,73 @@ fetch("baarit.csv")
   })
   .then(function(data) {
     var rows = data.split("\n").slice(1);
+    var tbody = document.querySelector("#taulukko tbody");
     var beers = [];
+    
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
       if (!row.trim()) continue;
+      
       var parts = row.indexOf(";") !== -1 ? row.split(";") : row.split(",");
       if (parts.length < 4) continue;
+      
       var baari = parts[0].trim();
       var tyyppi = parts[1].trim();
       var koko = parseFloat(parts[2].trim().replace(",", "."));
       var hinta = parseFloat(parts[3].trim().replace(",", "."));
+      
       if (isNaN(koko) || isNaN(hinta) || koko === 0) continue;
+      
       beers.push({ baari: baari, tyyppi: tyyppi, koko: koko, hinta: hinta, litrahinta: hinta / koko });
     }
+    
+    if (beers.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='5'>📊 Dataa ei voitu lukea</td></tr>";
+      return;
+    }
+    
     kaikkiBaarit = beers;
-    haeBaareja();
+    
+    beers.sort(function(a, b) { return a.litrahinta - b.litrahinta; });
+    
+    var min = beers[0].litrahinta;
+    var max = beers[beers.length - 1].litrahinta;
+    
+    function getColor(v) {
+      var ratio = (v - min) / (max - min || 1);
+      var r = Math.floor(255 * ratio);
+      var g = Math.floor(255 * (1 - ratio));
+      return "rgb(" + r + ", " + g + ", 100)";
+    }
+    
+    for (var j = 0; j < beers.length; j++) {
+      var item = beers[j];
+      var tr = document.createElement("tr");
+      var color = getColor(item.litrahinta);
+      
+      if (j === 0) tr.style.borderTop = "3px solid gold";
+      
+      tr.innerHTML = '<td><strong>' + escapeHtml(item.baari) + '</strong></td><td>' + escapeHtml(item.tyyppi) + '</td><td>' + item.koko.toFixed(2) + ' l</td><td>' + item.hinta.toFixed(2) + ' €</td><td style="background:' + color + '; font-weight:bold; color:#000; text-align:center;">' + item.litrahinta.toFixed(2) + ' €/l</td>';
+      tbody.appendChild(tr);
+    }
+    
+    var summary = document.createElement("tr");
+    summary.style.backgroundColor = "#1a3a1a";
+    summary.style.fontWeight = "bold";
+    summary.innerHTML = '<td colspan="4">🏆 Halvin litrahinta</td><td style="text-align:center; background:#00ff66; color:#000; font-size:1.2em;">⭐ ' + beers[0].litrahinta.toFixed(2) + ' €/l (' + escapeHtml(beers[0].baari) + ') ⭐</td>';
+    tbody.appendChild(summary);
+    
     var searchInput = document.getElementById("searchInput");
-    if (searchInput) { searchInput.addEventListener("keyup", haeBaareja); }
+    if (searchInput) {
+      searchInput.addEventListener("keyup", haeBaareja);
+    }
   })
   .catch(function(err) {
+    console.error("Virhe:", err);
     var tbody = document.querySelector("#taulukko tbody");
-    if (tbody) { tbody.innerHTML = "<tr><td colspan='5'>❌ Virhe: baarit.csv puuttuu</td></tr>"; }
+    if (tbody) {
+      tbody.innerHTML = "<tr><td colspan='5'>❌ Virhe: baarit.csv puuttuu</td></tr>";
+    }
   });
 
 function escapeHtml(str) {
@@ -310,5 +366,6 @@ function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 </script>
+
 </body>
 </html>
