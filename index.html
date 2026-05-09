@@ -6,26 +6,6 @@
   <title>Oulun oluthinnat</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
   <style>
-
-    /* Pakotetaan hinta-sarakkeet pysymään kurissa */
-th:last-child, td:last-child {
-    width: 80px;
-    min-width: 80px;
-}
-    /* Tekee hakukentästä täyslevyisen ja helposti klikattavan mobiilissa */
-.search-box input {
-    width: 100%;
-    max-width: 400px;
-    box-sizing: border-box;
-    font-size: 16px; /* 16px fontti estää iOS-laitteita zoomaamasta kenttään */
-}
-
-
-
-/* Lisätään hieman tilaa sarakkeille, ettei tekstit ole kiinni toisissaan */
-th, td {
-    padding: 8px 12px;
-}
     body {
       font-family: Arial;
       background: #121212;
@@ -188,8 +168,8 @@ th, td {
 <div class="search-box">
   <input type="text" id="searchInput" placeholder="🔍 Hae baaria tai olutta...">
 </div>
-<div style="overflow-x: auto;">
-  <table id="taulukko" style="width: 100%;">
+
+<table id="taulukko">
   <thead>
     <tr>
       <th>Baari</th>
@@ -362,12 +342,11 @@ fetch("baarit.csv")
       tbody.appendChild(tr);
     }
     
-   var summary = document.createElement("tr");
-  summary.style.backgroundColor = "#1a3a1a";
-  summary.style.fontWeight = "bold";
-  // Tässä on 5 erillistä solua, jotta taulukon sarakkeet pysyvät suorassa:
- '<td colspan="4" style="text-align:right; padding-right:10px;">🏆 Halvin: ' + escapeHtml(suodatetut[0].baari) + '</td><td style="text-align:center; background:#00ff66; color:#000;">' + suodatetut[0].litrahinta.toFixed(2) + '</td>';
-  tbody.appendChild(summary);
+    var summary = document.createElement("tr");
+    summary.style.backgroundColor = "#1a3a1a";
+    summary.style.fontWeight = "bold";
+    summary.innerHTML = '<td colspan="4">🏆 Halvin litrahinta</td><td style="text-align:center; background:#00ff66; color:#000; font-size:1.2em;">⭐ ' + beers[0].litrahinta.toFixed(2) + ' €/l (' + escapeHtml(beers[0].baari) + ') ⭐</td>';
+    tbody.appendChild(summary);
     
     var searchInput = document.getElementById("searchInput");
     if (searchInput) {
