@@ -356,11 +356,12 @@ fetch("baarit.csv")
       tbody.appendChild(tr);
     }
     
-    var summary = document.createElement("tr");
-    summary.style.backgroundColor = "#1a3a1a";
-    summary.style.fontWeight = "bold";
-    summary.innerHTML = '<td colspan="4">🏆 Halvin litrahinta</td><td style="text-align:center; background:#00ff66; color:#000; font-size:1.2em;">⭐ ' + beers[0].litrahinta.toFixed(2) + ' €/l (' + escapeHtml(beers[0].baari) + ') ⭐</td>';
-    tbody.appendChild(summary);
+   var summary = document.createElement("tr");
+  summary.style.backgroundColor = "#1a3a1a";
+  summary.style.fontWeight = "bold";
+  // Tässä on 5 erillistä solua, jotta taulukon sarakkeet pysyvät suorassa:
+  summary.innerHTML = '<td>🏆 Halvin</td><td>' + escapeHtml(suodatetut[0].baari) + '</td><td></td><td></td><td style="text-align:center; background:#00ff66; color:#000;">' + suodatetut[0].litrahinta.toFixed(2) + ' €/l</td>';
+  tbody.appendChild(summary);
     
     var searchInput = document.getElementById("searchInput");
     if (searchInput) {
