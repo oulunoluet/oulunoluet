@@ -6,6 +6,11 @@
   <title>Oulun oluthinnat</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
   <style>
+    #taulukko tr:last-child td {
+    white-space: nowrap; /* Estää tekstin hyppäämisen uudelle riville */
+    height: 40px;        /* Pakottaa korkeuden pysymään pienenä */
+    font-size: 0.8em;    /* Pienentää tekstiä vain tällä rivillä mobiilissa */
+}
     body {
       font-family: Arial;
       background: #121212;
