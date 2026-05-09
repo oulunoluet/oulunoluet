@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <title>Oulun oluthinnat</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
+  <style>
+    body {
+      font-family: Arial;
+      background: #121212;
+      color: #f0f0f0;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #ffffff;
+      margin-bottom: 5px;
+    }
+
+    /* Ylätunnisteen tyyli */
+    .info-header {
+      margin-bottom: 25px;
+      font-size: 0.9em;
+      color: #888;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #1e1e1e;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background: #2a2a2a;
+    }
+
+    tr:hover {
+      background: #2f2f2f;
+    }
+
+    .suggestion-btn {
+      background: #ff6600;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .suggestion-btn:hover {
+      background: #ff884d;
+    }
+
+    .search-box {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .search-box input {
+      padding: 8px 15px;
+      width: 250px;
+      border-radius: 20px;
+      border: 1px solid #444;
+      background: #2a2a2a;
+      color: white;
+      font-size: 14px;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: #ff6600;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+    }
+
+    .modal-content {
+      background-color: #1e1e1e;
+      margin: 10% auto;
+      padding: 25px;
+      border: 2px solid #ff6600;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 500px;
+      color: #f0f0f0;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover {
+      color: #ff6600;
+    }
+
+    .modal h2 {
+      margin-top: 0;
+      color: #ff884d;
+    }
+
+    .modal input, .modal select, .modal textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: white;
+      border-radius: 8px;
+    }
+
+    .modal button {
+      background: #ff6600;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .modal button:hover {
+      background: #ff884d;
+    }
+
+    .update-date {
+      color: #ffaa66;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+  <h1>🍺 Oulun oluthinnat</h1>
+  <button class="suggestion-btn" id="suggestionBtn">📝 Ilmoita muutoksesta</button>
+</div>
+
+<!-- Päivitystiedot siirretty ylös -->
+<div class="info-header">
+  <p><span class="update-date">Päivitetty: 9.5.2026</span></p>
+  <p>Sivulla näkyvät hinnat ovat baarien normaalihintoja. Happy hour - ja opiskelijatarjoukset eivät näy toistaiseksi.</p>
+</div>
+
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="🔍 Hae baaria tai olutta...">
+</div>
+
+<table id="taulukko">
+  <thead>
+    <tr>
+      <th>Baari</th>
+      <th>Olut</th> <!-- Muutettu Tyyppi -> Olut -->
+      <th>Koko (l)</th>
+      <th>Hinta (€)</th>
+      <th>€/l</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<div id="suggestionModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Ilmoita muutoksesta</h2>
+    <p>Lähetä ehdotuksesi sähköpostilla:</p>
+    
+    <select id="type">
+      <option value="hintamuutos">Hintamuutos</option>
+      <option value="uusi_baari">Uusi baari</option>
+      <option value="poisto">Baarin poisto</option>
+      <option value="muu">Muu</option>
+    </select>
+
+    <textarea id="details" rows="4" placeholder="Baarin nimi, olut, koko, hinta..."></textarea>
+    <input type="email" id="email" placeholder="Sähköpostisi (vapaaehtoinen)">
+
+    <button id="sendEmailBtn">Lähetä ehdotus</button>
+  </div>
+</div>
+
+<script>
+// Modal toiminnallisuus
+var modal = document.getElementById("suggestionModal");
+var btn = document.getElementById("suggestionBtn");
+var span = document.getElementsByClassName("close")[0];
+var kaikkiBaarit = [];
+
+btn.onclick = function() {
+  modal.style.display = "block";
+}
+
+span.onclick = function() {
+  modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+
+document.getElementById("sendEmailBtn").onclick = function() {
+  var type = document.getElementById("type").value;
+  var details = document.getElementById("details").value;
+  var email = document.getElementById("email").value;
+  var typeText = "";
+  if (type === "hintamuutos") typeText = "Hintamuutos";
+  else if (type === "uusi_baari") typeText = "Uusi baari";
+  else typeText = "Muu";
+  
+  var body = "Hei\n\nIlmoitan sivustolle:\n\nTyyppi: " + typeText + "\n\nTiedot:\n" + details + (email ? "\n\nLähettäjä: " + email : "");
+  var mailtoLink = "mailto:oulunoluet@gmail.com?subject=Oluthintaehdotus: " + typeText + "&body=" + encodeURIComponent(body);
+  window.location.href = mailtoLink;
+  modal.style.display = "none";
+  document.getElementById("details").value = "";
+  document.getElementById("email").value = "";
+}
+
+// HAKUTOIMINTO
+function haeBaareja() {
+  var hakusana = document.getElementById("searchInput").value.toLowerCase();
+  var suodatetut = kaikkiBaarit.filter(function(baari) {
+    return baari.baari.toLowerCase().indexOf(hakusana) !== -1 || baari.tyyppi.toLowerCase().indexOf(hakusana) !== -1;
+  });
+  
+  var tbody = document.querySelector("#taulukko tbody");
+  tbody.innerHTML = "";
+  
+  if (suodatetut.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='5'>🔍 Ei hakutuloksia</td></tr>";
+    return;
+  }
+  
+  suodatetut.sort(function(a, b) { return a.litrahinta - b.litrahinta; });
+  
+  var min = suodatetut[0].litrahinta;
+  var max = suodatetut[suodatetut.length - 1].litrahinta;
+  
+  function getColor(v) {
+    var ratio = (v - min) / (max - min || 1);
+    var r = Math.floor(255 * ratio);
+    var g = Math.floor(255 * (1 - ratio));
+    return "rgb(" + r + ", " + g + ", 100)";
+  }
+  
+  for (var j = 0; j < suodatetut.length; j++) {
+    var item = suodatetut[j];
+    var tr = document.createElement("tr");
+    var color = getColor(item.litrahinta);
+    
+    if (j === 0) tr.style.borderTop = "3px solid gold";
+    
+    tr.innerHTML = '<td><strong>' + escapeHtml(item.baari) + '</strong></td><td>' + escapeHtml(item.tyyppi) + '</td><td>' + item.koko.toFixed(2) + ' l</td><td>' + item.hinta.toFixed(2) + ' €</td><td style="background:' + color + '; font-weight:bold; color:#000; text-align:center;">' + item.litrahinta.toFixed(2) + ' €/l</td>';
+    tbody.appendChild(tr);
+  }
+  
+  var summary = document.createElement("tr");
+  summary.style.backgroundColor = "#1a3a1a";
+  summary.style.fontWeight = "bold";
+  summary.innerHTML = '<td colspan="4">🏆 Halvin litrahinta</td><td style="text-align:center; background:#00ff66; color:#000; font-size:1.2em;">⭐ ' + suodatetut[0].litrahinta.toFixed(2) + ' €/l (' + escapeHtml(suodatetut[0].baari) + ') ⭐</td>';
+  tbody.appendChild(summary);
+}
+
+fetch("baarit.csv")
+  .then(function(response) {
+    if (!response.ok) throw new Error("Virhe");
+    return response.text();
+  })
+  .then(function(data) {
+    var rows = data.split("\n").slice(1);
+    var tbody = document.querySelector("#taulukko tbody");
+    var beers = [];
+    
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      if (!row.trim()) continue;
+      
+      var parts = row.indexOf(";") !== -1 ? row.split(";") : row.split(",");
+      if (parts.length < 4) continue;
+      
+      var baari = parts[0].trim();
+      var tyyppi = parts[1].trim();
+      var koko = parseFloat(parts[2].trim().replace(",", "."));
+      var hinta = parseFloat(parts[3].trim().replace(",", "."));
+      
+      if (isNaN(koko) || isNaN(hinta) || koko === 0) continue;
+      
+      beers.push({ baari: baari, tyyppi: tyyppi, koko: koko, hinta: hinta, litrahinta: hinta / koko });
+    }
+    
+    if (beers.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='5'>📊 Dataa ei voitu lukea</td></tr>";
+      return;
+    }
+    
+    kaikkiBaarit = beers;
+    
+    beers.sort(function(a, b) { return a.litrahinta - b.litrahinta; });
+    
+    var min = beers[0].litrahinta;
+    var max = beers[beers.length - 1].litrahinta;
+    
+    function getColor(v) {
+      var ratio = (v - min) / (max - min || 1);
+      var r = Math.floor(255 * ratio);
+      var g = Math.floor(255 * (1 - ratio));
+      return "rgb(" + r + ", " + g + ", 100)";
+    }
+    
+    for (var j = 0; j < beers.length; j++) {
+      var item = beers[j];
+      var tr = document.createElement("tr");
+      var color = getColor(item.litrahinta);
+      
+      if (j === 0) tr.style.borderTop = "3px solid gold";
+      
+      tr.innerHTML = '<td><strong>' + escapeHtml(item.baari) + '</strong></td><td>' + escapeHtml(item.tyyppi) + '</td><td>' + item.koko.toFixed(2) + ' l</td><td>' + item.hinta.toFixed(2) + ' €</td><td style="background:' + color + '; font-weight:bold; color:#000; text-align:center;">' + item.litrahinta.toFixed(2) + ' €/l</td>';
+      tbody.appendChild(tr);
+    }
+    
+    var summary = document.createElement("tr");
+    summary.style.backgroundColor = "#1a3a1a";
+    summary.style.fontWeight = "bold";
+    summary.innerHTML = '<td colspan="4">🏆 Halvin litrahinta</td><td style="text-align:center; background:#00ff66; color:#000; font-size:1.2em;">⭐ ' + beers[0].litrahinta.toFixed(2) + ' €/l (' + escapeHtml(beers[0].baari) + ') ⭐</td>';
+    tbody.appendChild(summary);
+    
+    var searchInput = document.getElementById("searchInput");
+    if (searchInput) {
+      searchInput.addEventListener("keyup", haeBaareja);
+    }
+  })
+  .catch(function(err) {
+    console.error("Virhe:", err);
+    var tbody = document.querySelector("#taulukko tbody");
+    if (tbody) {
+      tbody.innerHTML = "<tr><td colspan='5'>❌ Virhe: baarit.csv puuttuu</td></tr>";
+    }
+  });
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+</script>
+
+</body>
+</html>
