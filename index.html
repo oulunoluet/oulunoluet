@@ -6,6 +6,25 @@
   <title>Oulun oluthinnat</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍺</text></svg>">
   <style>
+    /* Tekee hakukentästä täyslevyisen ja helposti klikattavan mobiilissa */
+.search-box input {
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    font-size: 16px; /* 16px fontti estää iOS-laitteita zoomaamasta kenttään */
+}
+
+/* Sallii taulukon rullata sivusuunnassa, jos se ei mahdu näytölle */
+table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* Lisätään hieman tilaa sarakkeille, ettei tekstit ole kiinni toisissaan */
+th, td {
+    padding: 8px 12px;
+}
     body {
       font-family: Arial;
       background: #121212;
