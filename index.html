@@ -402,16 +402,19 @@ function paivitaTaulukko(data) {
     tbody.appendChild(tr);
   }
   
-// PALAUTUS ALKUPERÄISEEN "KULTA-TYYLIIN" (Kuvan mukainen)
-  var summary = document.createElement("tr");
+// KAPEAMPI VERSIO: Baarin nimi siirretty vasemmalle, hinta kapeassa sarakkeessa
+var summary = document.createElement("tr");
   summary.style.backgroundColor = "#1a3a1a";
   summary.style.fontWeight = "bold";
   
-  summary.innerHTML = '<td colspan="4" style="text-align:center; padding: 12px; color: #fff; border: 1px solid #333;">' +
-                      '🏆 Halvin litrahinta' +
+  summary.innerHTML = '<td colspan="4" style="padding: 12px; border: 1px solid #333;">' +
+                      '<div style="display: flex; align-items: center; justify-content: center; gap: 10px; line-height: 1;">' +
+                      '<span style="display: flex; align-items: center;">🏆 Halvin litrahinta:</span>' +
+                      '<span style="color:#ffaa66; display: flex; align-items: center;">' + escapeHtml(data[0].baari) + '</span>' +
+                      '</div>' +
                       '</td>' +
-                      '<td style="text-align:center; background:#00ff66; color:#000; font-size:1.1em; border: 1px solid #333; white-space: nowrap;">' +
-                      '⭐ ' + data[0].litrahinta.toFixed(2) + ' €/l (' + escapeHtml(data[0].baari) + ') ⭐' +
+                      '<td style="text-align:center; background:#00ff66; color:#000; font-size:1.1em; border: 1px solid #333; width: 100px; min-width: 100px; vertical-align: middle;">' +
+                      data[0].litrahinta.toFixed(2) + ' €/l' +
                       '</td>';
   
   tbody.appendChild(summary);
