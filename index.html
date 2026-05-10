@@ -92,8 +92,8 @@
       font-size: 0.85em; 
     }
     
-    tr:hover {
-      background: #2f2f2f;
+    tr:hover td {
+      background-color: #333;
     }
 
     /* Hakukenttä */
@@ -127,20 +127,6 @@
 
     .suggestion-btn:hover {
       background: #ff884d;
-    }
-
-    /* Summary-rivi (Alarivi) */
-    .summary-row { 
-      background: #1a3a1a; 
-      font-weight: bold; 
-    }
-    .summary-label { 
-      text-align: right; 
-    }
-    .summary-value { 
-      background: #00ff66 !important; 
-      color: #000 !important; 
-      font-size: 1.1em;
     }
 
     #hh-container { display: none; }
@@ -207,7 +193,6 @@
       body { padding: 10px; }
       .search-box input { width: 85%; }
       th, td { padding: 8px 5px; font-size: 0.9em; }
-      .summary-label { font-size: 0.8em; }
     }
   </style>
 </head>
@@ -302,20 +287,12 @@ window.onclick = function(event) {
 }
 
 document.getElementById("sendEmailBtn").onclick = function() {
-  var type = document.getElementById("type").value;
-  var details = document.getElementById("details").value;
-  var email = document.getElementById("email").value;
   var typeText = document.getElementById("type").options[document.getElementById("type").selectedIndex].text;
-  
-  var body = "Hei\n\nIlmoitan sivustolle:\n\nTyyppi: " + typeText + "\n\nTiedot:\n" + details + (email ? "\n\nLähettäjä: " + email : "");
-  var mailtoLink = "mailto:oulunoluet@gmail.com?subject=Oluthintaehdotus: " + typeText + "&body=" + encodeURIComponent(body);
-  window.location.href = mailtoLink;
+  var body = "Hei\n\nIlmoitan sivustolle:\n\nTyyppi: " + typeText + "\n\nTiedot:\n" + document.getElementById("details").value + (document.getElementById("email").value ? "\n\nLähettäjä: " + document.getElementById("email").value : "");
+  window.location.href = "mailto:oulunoluet@gmail.com?subject=Oluthintaehdotus: " + typeText + "&body=" + encodeURIComponent(body);
   modal.style.display = "none";
-  document.getElementById("details").value = "";
-  document.getElementById("email").value = "";
 }
 
-// --- OSIOIDEN VAIHTO ---
 function naytaOsio(osio) {
   const hCont = document.getElementById('hinnasto-container');
   const hhCont = document.getElementById('hh-container');
@@ -339,16 +316,13 @@ function naytaOsio(osio) {
   }
 }
 
-// --- HAPPY HOUR LATAUS ---
 function lataaHappyHour() {
-  fetch("happyhour.csv")
-    .then(function(response) { if(!response.ok) throw new Error(); return response.text(); })
-    .then(function(data) {
-      var rows = data.split("\n").slice(1);
+  fetch("happyhour.csv", { headers: { 'Content-Type': 'text/csv; charset=utf-8' } })
+    .then(r => r.text())
+    .then(data => {
       var tbody = document.querySelector("#hh-taulukko tbody");
       tbody.innerHTML = "";
-      
-      rows.forEach(function(row) {
+      data.split("\n").slice(1).forEach(row => {
         if (!row.trim()) return;
         var parts = row.indexOf(";") !== -1 ? row.split(";") : row.split(",");
         if (parts.length < 2) return;
@@ -359,117 +333,70 @@ function lataaHappyHour() {
         tbody.appendChild(tr);
       });
       hhLadattu = true;
-    })
-    .catch(function() {
-      document.querySelector("#hh-taulukko tbody").innerHTML = "<tr><td colspan='3'>Ei Happy Hour -tietoja saatavilla.</td></tr>";
     });
 }
 
-// --- HINNASTON PÄIVITYS JA VÄRITYS ---
 function paivitaTaulukko(data) {
   var tbody = document.querySelector("#taulukko tbody");
   tbody.innerHTML = "";
-  
   if (data.length === 0) {
     tbody.innerHTML = "<tr><td colspan='5'>🔍 Ei hakutuloksia</td></tr>";
     return;
   }
-
-  data.sort(function(a, b) { return a.litrahinta - b.litrahinta; });
+  data.sort((a, b) => a.litrahinta - b.litrahinta);
+  var min = data[0].litrahinta, max = data[data.length - 1].litrahinta;
   
-  var min = data[0].litrahinta;
-  var max = data[data.length - 1].litrahinta;
-  
-  function getColor(v) {
-    var ratio = (v - min) / (max - min || 1);
-    var r = Math.floor(255 * ratio);
-    var g = Math.floor(255 * (1 - ratio));
-    return "rgb(" + r + ", " + g + ", 100)";
-  }
-  
-  for (var j = 0; j < data.length; j++) {
-    var item = data[j];
+  data.forEach((item, j) => {
     var tr = document.createElement("tr");
-    var color = getColor(item.litrahinta);
+    var ratio = (item.litrahinta - min) / (max - min || 1);
+    var color = "rgb(" + Math.floor(255 * ratio) + ", " + Math.floor(255 * (1 - ratio)) + ", 100)";
     
-    if (j === 0) tr.style.borderLeft = "5px solid gold";
+    var mitali = "";
+    if (j === 0) { tr.style.borderLeft = "5px solid gold"; mitali = "🥇 "; }
+    else if (j === 1) { tr.style.borderLeft = "5px solid silver"; mitali = "🥈 "; }
+    else if (j === 2) { tr.style.borderLeft = "5px solid #cd7f32"; mitali = "🥉 "; }
     
-    tr.innerHTML = '<td><strong>' + escapeHtml(item.baari) + '</strong></td>' +
+    tr.innerHTML = '<td><strong style="display:flex; align-items:center; justify-content:center; gap:5px;">' + mitali + escapeHtml(item.baari) + '</strong></td>' +
                    '<td>' + escapeHtml(item.tyyppi) + '</td>' +
                    '<td>' + item.koko.toFixed(2) + ' l</td>' +
                    '<td>' + item.hinta.toFixed(2) + ' €</td>' +
                    '<td style="background:' + color + '; font-weight:bold; color:#000;">' + item.litrahinta.toFixed(2) + '</td>';
     tbody.appendChild(tr);
-  }
-  
-// KAPEAMPI VERSIO: Baarin nimi siirretty vasemmalle, hinta kapeassa sarakkeessa
-var summary = document.createElement("tr");
+  });
+
+  var summary = document.createElement("tr");
   summary.style.backgroundColor = "#1a3a1a";
   summary.style.fontWeight = "bold";
-  
   summary.innerHTML = '<td colspan="4" style="padding: 12px; border: 1px solid #333;">' +
                       '<div style="display: flex; align-items: center; justify-content: center; gap: 10px; line-height: 1;">' +
-                      '<span style="display: flex; align-items: center;">🏆 Halvin litrahinta:</span>' +
-                      '<span style="color:#ffaa66; display: flex; align-items: center;">' + escapeHtml(data[0].baari) + '</span>' +
-                      '</div>' +
-                      '</td>' +
+                      '<span>🏆 Halvin litrahinta:</span>' +
+                      '<span style="color:#ffaa66;">' + escapeHtml(data[0].baari) + '</span>' +
+                      '</div></td>' +
                       '<td style="text-align:center; background:#00ff66; color:#000; font-size:1.1em; border: 1px solid #333; width: 100px; min-width: 100px; vertical-align: middle;">' +
-                      data[0].litrahinta.toFixed(2) + ' €/l' +
-                      '</td>';
-  
+                      data[0].litrahinta.toFixed(2) + ' €/l</td>';
   tbody.appendChild(summary);
 }
 
-// --- HAKUTOIMINTO ---
 function haeBaareja() {
   var hakusana = document.getElementById("searchInput").value.toLowerCase();
-  var suodatetut = kaikkiBaarit.filter(function(baari) {
-    return baari.baari.toLowerCase().indexOf(hakusana) !== -1 || baari.tyyppi.toLowerCase().indexOf(hakusana) !== -1;
-  });
-  paivitaTaulukko(suodatetut);
+  paivitaTaulukko(kaikkiBaarit.filter(b => b.baari.toLowerCase().includes(hakusana) || b.tyyppi.toLowerCase().includes(hakusana)));
 }
 
-// --- ALKULATAUS (baarit.csv) ---
-fetch("baarit.csv")
-  .then(function(response) {
-    if (!response.ok) throw new Error("Virhe");
-    return response.text();
-  })
-  .then(function(data) {
-    var rows = data.split("\n").slice(1);
-    var beers = [];
-    
-    for (var i = 0; i < rows.length; i++) {
-      var row = rows[i];
-      if (!row.trim()) continue;
+fetch("baarit.csv", { headers: { 'Content-Type': 'text/csv; charset=utf-8' } })
+  .then(r => r.text())
+  .then(data => {
+    data.split("\n").slice(1).forEach(row => {
+      if (!row.trim()) return;
       var parts = row.indexOf(";") !== -1 ? row.split(";") : row.split(",");
-      if (parts.length < 4) continue;
-      
-      var baari = parts[0].trim();
-      var tyyppi = parts[1].trim();
-      var koko = parseFloat(parts[2].trim().replace(",", "."));
-      var hinta = parseFloat(parts[3].trim().replace(",", "."));
-      
-      if (!isNaN(koko) && !isNaN(hinta) && koko > 0) {
-        beers.push({ baari: baari, tyyppi: tyyppi, koko: koko, hinta: hinta, litrahinta: hinta / koko });
-      }
-    }
-    
-    kaikkiBaarit = beers;
+      if (parts.length < 4) return;
+      var k = parseFloat(parts[2].trim().replace(",", ".")), h = parseFloat(parts[3].trim().replace(",", "."));
+      if (!isNaN(k) && !isNaN(h) && k > 0) kaikkiBaarit.push({ baari: parts[0].trim(), tyyppi: parts[1].trim(), koko: k, hinta: h, litrahinta: h / k });
+    });
     paivitaTaulukko(kaikkiBaarit);
-    
     document.getElementById("searchInput").addEventListener("keyup", haeBaareja);
-  })
-  .catch(function(err) {
-    console.error(err);
-    document.querySelector("#taulukko tbody").innerHTML = "<tr><td colspan='5'>❌ Virhe: baarit.csv puuttuu</td></tr>";
   });
 
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
+function escapeHtml(s) { return s ? s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;") : ""; }
 </script>
-
 </body>
 </html>
